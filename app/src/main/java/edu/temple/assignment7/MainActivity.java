@@ -9,12 +9,16 @@ import android.os.Bundle;
 
 public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
     BookList myList;
+    boolean container2present;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        container2present = findViewById(R.id.containerLandscape) != null;
 
         //Initializing and populating the books we will use
         BookList myList = new BookList();
@@ -29,21 +33,16 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         myList.add(new Book("The Handmaid's Tale", "Margaret Atwood"));//9
         myList.add(new Book("The Great Gatsby", "F Scott Fitzgerald"));//10
 
-        Fragment myFragment = new Fragment();
-        Bundle myBundle = new Bundle();
-        myBundle.putInt("id",123);
-        myFragment.setArguments(myBundle);
-
         getSupportFragmentManager()
                 .beginTransaction()
-                .add(R.id.container, BookListFragment.newInstance(myList))
+                .replace(R.id.container, BookListFragment.newInstance( myList ))
                 .commit();
 
 
     }
 
     @Override
-    public void itemClicked(int position) {
+    public void itemClicked(int position, BookList myList) {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.container,BookDetailsFragment.newInstance(myList.get(position)))

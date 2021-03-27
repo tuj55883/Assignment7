@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import java.util.ArrayList;
 
 
 public class BookListFragment extends Fragment {
@@ -56,13 +55,14 @@ public class BookListFragment extends Fragment {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                ((BookListFragmentInterface) getActivity()).itemClicked(position);
+                ((BookListFragmentInterface) getActivity()).itemClicked(position,myBookList);
             }
         });
         return listView;
     }
 
     interface BookListFragmentInterface{
-        public void itemClicked(int position);
+        public void itemClicked(int position,BookList myBookList) ;
+
     }
 }
