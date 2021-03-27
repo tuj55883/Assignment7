@@ -7,11 +7,11 @@
     tools:context=".MainActivity">
 
     <FrameLayout
-        android:id="@+id/frameLayout"
+        android:id="@+id/container"
         android:layout_width="229dp"
         android:layout_height="305dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/frameLayout2"
+        app:layout_constraintEnd_toStartOf="@+id/containerLandscape"
         app:layout_constraintHorizontal_bias="0.368"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -19,7 +19,7 @@
     </FrameLayout>
 
     <FrameLayout
-        android:id="@+id/frameLayout2"
+        android:id="@+id/containerLandscape"
         android:layout_width="266dp"
         android:layout_height="240dp"
         android:layout_marginEnd="92dp"
