@@ -62,6 +62,6 @@ public class BookDetailsFragment extends Fragment {
 
     public void changeBook(Book book){
         textView1.setText(book.getTitle());
-        textView2.setText(book.getAuthor());
+        textView2.setText("Author: "+book.getAuthor());
     }
 }

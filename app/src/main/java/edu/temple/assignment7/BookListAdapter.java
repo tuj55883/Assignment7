@@ -6,12 +6,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class BookListAdapter extends BaseAdapter{
 
     Context context;
     BookList bookList;
+    LinearLayout linearLayout;
 
     public BookListAdapter(Context context, BookList bookList){
         this.context = context;
@@ -40,15 +42,21 @@ public class BookListAdapter extends BaseAdapter{
         TextView author;
 
         if(convertView==null){
+
+            linearLayout = new LinearLayout(context);
+            linearLayout.setOrientation(linearLayout.VERTICAL);
             textView = new TextView(context);
             textView.setTextSize(22);
             textView.setPadding(15,20,0,10);
             author = new TextView(context);
             author.setTextSize(15);
             author.setPadding(15,10,0,20);
+            linearLayout.addView(textView);
+            linearLayout.addView(author);
         } else {
-            textView = (TextView) convertView;
-            //author = (TextView) convertView;
+            linearLayout = (LinearLayout) convertView;
+            textView = (TextView) linearLayout.getChildAt(0);
+            author = (TextView) linearLayout.getChildAt(1);
 
         }
 
@@ -56,9 +64,9 @@ public class BookListAdapter extends BaseAdapter{
 
 
         textView.setText(bookList.get(position).getTitle());
-        //author.setText(bookList.get(position).getAuthor());
+        author.setText(bookList.get(position).getAuthor());
 
 
-        return textView;
+        return linearLayout;
     }
 }
