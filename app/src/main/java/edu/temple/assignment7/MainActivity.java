@@ -15,15 +15,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
     private static final String KEY = "a";
 
     String bookKey = "book";
-    BookList myList;
+    static BookList myList;
     boolean container2present;
     BookDetailsFragment bookDetailsFragment;
     static int place;
     Button searchMain;
+    RequestQueue requestQueue;
 
 
     @Override
@@ -59,10 +71,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
 
 
-        getSupportFragmentManager()
+        /*getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.container, BookListFragment.newInstance(myList))
-                .commit();
+                .commit();*/
 
         if (container2present) {
             bookDetailsFragment = new BookDetailsFragment();
@@ -123,6 +135,17 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                         .replace(R.id.container, BookDetailsFragment.newInstance(myList.get(place)))
                         .addToBackStack(null)
                         .commit();
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, BookListFragment.newInstance(myList))
+                        .commit();
+                if (container2present) {
+                    bookDetailsFragment = new BookDetailsFragment();
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.containerLandscape, bookDetailsFragment)
+                            .commit();
+                }
             } else {
                 if(myList.size() != 0) {
                     bookDetailsFragment.changeBook(myList.get(place));
@@ -134,11 +157,54 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+        requestQueue = Volley.newRequestQueue(this);
         if(requestCode==1){
             if(resultCode==RESULT_OK){
+                String url = "https://kamorris.com/lab/cis3515/search.php?term=";
                 String result = data.getStringExtra("result");
-                Log.d("result", result);
+                JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET,url+result,null,new Response.Listener<JSONArray>() {
+
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try {
+                            BookList myList = new BookList();
+                            for(int i = 0 ; i<response.length(); i++) {
+
+                                JSONObject book = response.getJSONObject(i);
+                                String title = book.getString("title");
+                                String author = book.getString("author");
+                                int id = book.getInt("id");
+                                String coverURL = book.getString("cover_url");
+                                Book newBook = new Book(title,author,id,coverURL);
+                                myList.add(newBook);
+                                container2present = findViewById(R.id.containerLandscape) != null;
+                                getSupportFragmentManager()
+                                        .beginTransaction()
+                                        .replace(R.id.container, BookListFragment.newInstance(myList))
+                                        .commit();
+
+
+                            }
+
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }, new Response.ErrorListener(){
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+
+
+                });
+                requestQueue.add(jsonArrayRequest);
+
+
+
+
             }
         }
     }

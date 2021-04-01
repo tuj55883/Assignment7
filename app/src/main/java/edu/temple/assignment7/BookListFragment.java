@@ -49,7 +49,7 @@ public class BookListFragment extends Fragment {
         // Inflate the layout for this fragment
         ListView listView = (ListView) inflater.inflate(R.layout.fragment_book_list, container, false);
 
-        //listView.setAdapter(new BookListAdapter(getActivity(),myBookList));
+        listView.setAdapter(new BookListAdapter(getActivity(),myBookList));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
 
