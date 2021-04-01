@@ -1,13 +1,16 @@
 package edu.temple.assignment7;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -47,8 +50,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             @Override
             public void onClick(View v) {
                 Intent launchIntent = new Intent(MainActivity.this, BookSearchActivity.class);
-                launchIntent.putExtra("EXTRA_POSITION", 0);
-                startActivity(launchIntent);
+                startActivityForResult(launchIntent, 1);
+
 
             }
         });
@@ -126,5 +129,17 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 }
             }
     }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode==1){
+            if(resultCode==RESULT_OK){
+                String result = data.getStringExtra("result");
+                Log.d("result", result);
+            }
+        }
     }
 }
