@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     protected void onCreate(Bundle savedInstanceState) {
 
         //Initializing and populating the books we will use
-        BookList myList = new BookList();
+        /*BookList myList = new BookList();
         myList.add(new Book("To Kill A Mockingbird", "Harper Lee"));//1
         myList.add(new Book("Great Expectations", "Charles Dickens"));//2
         myList.add(new Book("Lolita", "Vladimir Nabokov"));//3
@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         myList.add(new Book("Wuthering Heights", "Emily Bronte"));//7
         myList.add(new Book("Lady Chatterley's Lover", "DH Lawrence"));//8
         myList.add(new Book("The Handmaid's Tale", "Margaret Atwood"));//9
-        myList.add(new Book("The Great Gatsby", "F Scott Fitzgerald"));//10
+        myList.add(new Book("The Great Gatsby", "F Scott Fitzgerald"));//10*/
 
         super.onCreate(savedInstanceState);
 
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         BookList myList = new BookList();
-        myList.add(new Book("To Kill A Mockingbird", "Harper Lee"));//1
+        /*myList.add(new Book("To Kill A Mockingbird", "Harper Lee"));//1
         myList.add(new Book("Great Expectations", "Charles Dickens"));//2
         myList.add(new Book("Lolita", "Vladimir Nabokov"));//3
         myList.add(new Book("Lord of the Flies", "William Golding"));//4
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         myList.add(new Book("Wuthering Heights", "Emily Bronte"));//7
         myList.add(new Book("Lady Chatterley's Lover", "DH Lawrence"));//8
         myList.add(new Book("The Handmaid's Tale", "Margaret Atwood"));//9
-        myList.add(new Book("The Great Gatsby", "F Scott Fitzgerald"));//10
+        myList.add(new Book("The Great Gatsby", "F Scott Fitzgerald"));//10*/
 
 
         if (savedInstanceState != null) {
