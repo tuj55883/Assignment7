@@ -6,9 +6,11 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
     private static final String KEY = "a";
@@ -18,6 +20,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     boolean container2present;
     BookDetailsFragment bookDetailsFragment;
     static int place;
+    Button searchMain;
 
 
     @Override
@@ -37,11 +40,18 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         myList.add(new Book("The Great Gatsby", "F Scott Fitzgerald"));//10*/
 
         super.onCreate(savedInstanceState);
-
-
-
         setContentView(R.layout.activity_main);
 
+        searchMain = findViewById(R.id.searchMain);
+        searchMain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent launchIntent = new Intent(MainActivity.this, BookSearchActivity.class);
+                launchIntent.putExtra("EXTRA_POSITION", 0);
+                startActivity(launchIntent);
+
+            }
+        });
         container2present = findViewById(R.id.containerLandscape) != null;
 
 
@@ -61,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
 
     }
+
+
 
     @Override
     public void itemClicked(int position, BookList myList) {
@@ -102,14 +114,16 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         if (savedInstanceState != null) {
             place = savedInstanceState.getInt(KEY);
-            if (!container2present) {
+            if (!container2present&&myList.size() != 0) {
                 getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.container, BookDetailsFragment.newInstance(myList.get(place)))
                         .addToBackStack(null)
                         .commit();
             } else {
-                bookDetailsFragment.changeBook(myList.get(place));
+                if(myList.size() != 0) {
+                    bookDetailsFragment.changeBook(myList.get(place));
+                }
             }
     }
     }
