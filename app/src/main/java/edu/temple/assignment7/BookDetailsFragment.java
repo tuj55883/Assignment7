@@ -1,3 +1,4 @@
+//This handles the displaying of the books
 package edu.temple.assignment7;
 
 import android.net.Uri;
@@ -71,4 +72,11 @@ public class BookDetailsFragment extends Fragment {
         textView2.setText("Author: "+book.getAuthor());
         Picasso.get().load(Uri.parse(book.getCoverURL())).into(imageView);
     }
+
+    public void makeEmpty() {
+        textView1.setText(" ");
+        textView2.setText(" ");
+        imageView.setImageResource(R.drawable.empty);
+    }
+
 }

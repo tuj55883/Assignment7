@@ -1,3 +1,4 @@
+//Just a basic book class
 package edu.temple.assignment7;
 
 import android.os.Parcel;

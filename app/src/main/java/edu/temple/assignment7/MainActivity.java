@@ -1,3 +1,6 @@
+//This app does a search based on the users input for books
+//then it returns the list of books that matches by author or
+//title and the user can then click on it to see the cover
 package edu.temple.assignment7;
 
 import androidx.annotation.NonNull;
@@ -27,9 +30,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
+    //Makes keys for the booklist and book selected that we will save
     private static final String KEY = "a";
     private static final String KEY2 = "b";
 
+    //Initializes all the values we will use
     String bookKey = "book";
     static BookList myList;
     boolean container2present;
@@ -39,25 +44,17 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     RequestQueue requestQueue;
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        //Initializing and populating the books we will use
-        /*BookList myList = new BookList();
-        myList.add(new Book("To Kill A Mockingbird", "Harper Lee"));//1
-        myList.add(new Book("Great Expectations", "Charles Dickens"));//2
-        myList.add(new Book("Lolita", "Vladimir Nabokov"));//3
-        myList.add(new Book("Lord of the Flies", "William Golding"));//4
-        myList.add(new Book("The Scarlet Letter", "Nathaniel Hawthorne"));//5
-        myList.add(new Book("The Catcher in the Rye", "JD Salinger"));//6
-        myList.add(new Book("Wuthering Heights", "Emily Bronte"));//7
-        myList.add(new Book("Lady Chatterley's Lover", "DH Lawrence"));//8
-        myList.add(new Book("The Handmaid's Tale", "Margaret Atwood"));//9
-        myList.add(new Book("The Great Gatsby", "F Scott Fitzgerald"));//10*/
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //This is the search button
+        //When clicked it launches the bookSearchActivty
+        //the activity returns the user search
+        //Go to activity result to see the outcome of the search
         searchMain = findViewById(R.id.searchMain);
         searchMain.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,11 +70,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
 
 
-        /*getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.container, BookListFragment.newInstance(myList))
-                .commit();*/
-
+        //This just makes the book details fragment for landscape mode
         if (container2present) {
             bookDetailsFragment = new BookDetailsFragment();
             getSupportFragmentManager()
@@ -90,10 +83,14 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     }
 
 
-
+    //This is the selection of the book from the list
+    //When clicked it will display the book selected
     @Override
     public void itemClicked(int position, BookList myList) {
+        //This sets the place if the app is restarted
         place = position;
+        //This checks weather to put the display fragment in
+        //container one if in portrait or container 2 in landscape
         if (!container2present) {
             getSupportFragmentManager()
                     .beginTransaction()
@@ -105,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         }
 
     }
-
+    //Saves the book list and placement when rotated
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putInt(KEY,place);
@@ -115,21 +112,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     }
 
 
-
+    //This sets the fragments when the app is rotated
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
-        /*myList.add(new Book("To Kill A Mockingbird", "Harper Lee"));//1
-        myList.add(new Book("Great Expectations", "Charles Dickens"));//2
-        myList.add(new Book("Lolita", "Vladimir Nabokov"));//3
-        myList.add(new Book("Lord of the Flies", "William Golding"));//4
-        myList.add(new Book("The Scarlet Letter", "Nathaniel Hawthorne"));//5
-        myList.add(new Book("The Catcher in the Rye", "JD Salinger"));//6
-        myList.add(new Book("Wuthering Heights", "Emily Bronte"));//7
-        myList.add(new Book("Lady Chatterley's Lover", "DH Lawrence"));//8
-        myList.add(new Book("The Handmaid's Tale", "Margaret Atwood"));//9
-        myList.add(new Book("The Great Gatsby", "F Scott Fitzgerald"));//10*/
 
-
+        //All these ifs are to check which fragment to put it into
         if (savedInstanceState != null) {
             place = savedInstanceState.getInt(KEY);
             myList = savedInstanceState.getParcelable(KEY2);
@@ -140,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     getSupportFragmentManager()
                             .beginTransaction()
                             .replace(R.id.container, BookDetailsFragment.newInstance(myList.get(place)))
-                            .addToBackStack(null)
                             .commit();
                 } else {
                     getSupportFragmentManager()
@@ -151,11 +137,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
 
             }else {
-                if (myList != null) {
+                if (myList != null && myList.size() != 0 && place !=-1) {
                     bookDetailsFragment.changeBook(myList.get(place));
                 }
             }
-                if (container2present&&myList != null) {
+                if (container2present&&myList != null && place !=-1) {
 
                     getSupportFragmentManager()
                             .beginTransaction()
@@ -179,20 +165,24 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         requestQueue = Volley.newRequestQueue(this);
-
+        //Makes sure result is good
         if(requestCode==1){
             if(resultCode==RESULT_OK){
-
+                //Initializes the url, result and json
                 String url = "https://kamorris.com/lab/cis3515/search.php?term=";
                 String result = data.getStringExtra("result");
+                //combines the url and result into one search url
                 JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET,url+result,null,new Response.Listener<JSONArray>() {
 
                     @Override
                     public void onResponse(JSONArray response) {
                         try {
+                            //Makes a brand new book list and sets place to -1 so
+                            //it resets the book selection
                             myList = new BookList();
                             place = -1;
                             for(int i = 0 ; i<response.length(); i++) {
+                                //goes through each book one by one and adds it to the list
 
                                 JSONObject book = response.getJSONObject(i);
                                 String title = book.getString("title");
@@ -201,14 +191,22 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                                 String coverURL = book.getString("cover_url");
                                 Book newBook = new Book(title,author,id,coverURL);
                                 myList.add(newBook);
-                                container2present = findViewById(R.id.containerLandscape) != null;
-                                getSupportFragmentManager()
-                                        .beginTransaction()
-                                        .replace(R.id.container, BookListFragment.newInstance(myList))
-                                        .commit();
-
 
                             }
+                            //checks if container 2 is open
+                            container2present = findViewById(R.id.containerLandscape) != null;
+                            //makes the a brand new book list from the search
+                            getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .replace(R.id.container, BookListFragment.newInstance(myList))
+                                    .commit();
+                            //if container 2 is present makes a new one of them
+                            if(container2present) {
+                                bookDetailsFragment.makeEmpty();
+
+                            }
+
+
 
 
 
@@ -234,5 +232,4 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         }
     }
 }
-//TODO: when you type in a word that is not found the data set is not updated
-//TODO: Save when closing, i think you can copy code from onrestoreinstancestate and put it in resume
+

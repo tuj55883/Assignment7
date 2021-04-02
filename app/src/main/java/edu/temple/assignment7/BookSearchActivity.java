@@ -1,3 +1,5 @@
+//This activity is just a search box that the user types in
+
 package edu.temple.assignment7;
 
 import android.content.Intent;
@@ -13,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 public class BookSearchActivity extends AppCompatActivity {
 
     private TextView mTextView;
+    //To buttons to search and cancel
+    //Then the edit text box where the user types
     Button search;
     Button cancel;
     TextView editText;
@@ -27,6 +31,8 @@ public class BookSearchActivity extends AppCompatActivity {
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //If use clicks search it will return the value in the
+                //text box and close application
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("result", editText.getText().toString());
 
@@ -41,6 +47,7 @@ public class BookSearchActivity extends AppCompatActivity {
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //If use clicks cancel it just ends the app
                 Intent resultIntent = new Intent();
                 setResult(RESULT_CANCELED, resultIntent);
                 finish();
