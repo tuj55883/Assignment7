@@ -28,6 +28,7 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
     private static final String KEY = "a";
+    private static final String KEY2 = "b";
 
     String bookKey = "book";
     static BookList myList;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         searchMain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Intent launchIntent = new Intent(MainActivity.this, BookSearchActivity.class);
                 startActivityForResult(launchIntent, 1);
 
@@ -91,6 +93,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void itemClicked(int position, BookList myList) {
+        place = position;
         if (!container2present) {
             getSupportFragmentManager()
                     .beginTransaction()
@@ -100,12 +103,13 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         } else {
             bookDetailsFragment.changeBook(myList.get(position));
         }
-        place = position;
+
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putInt(KEY,place);
+        outState.putParcelable(KEY2,myList);
         super.onSaveInstanceState(outState);
 
     }
@@ -114,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
-        BookList myList = new BookList();
         /*myList.add(new Book("To Kill A Mockingbird", "Harper Lee"));//1
         myList.add(new Book("Great Expectations", "Charles Dickens"));//2
         myList.add(new Book("Lolita", "Vladimir Nabokov"));//3
@@ -129,37 +132,57 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         if (savedInstanceState != null) {
             place = savedInstanceState.getInt(KEY);
-            if (!container2present&&myList.size() != 0) {
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.container, BookDetailsFragment.newInstance(myList.get(place)))
-                        .addToBackStack(null)
-                        .commit();
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.container, BookListFragment.newInstance(myList))
-                        .commit();
-                if (container2present) {
-                    bookDetailsFragment = new BookDetailsFragment();
+            myList = savedInstanceState.getParcelable(KEY2);
+            Log.d("test", String.valueOf(place));
+            if (!container2present&&myList != null) {
+
+                if(place>=0) {
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.container, BookDetailsFragment.newInstance(myList.get(place)))
+                            .addToBackStack(null)
+                            .commit();
+                } else {
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.container, BookListFragment.newInstance(myList))
+                            .commit();
+                }
+
+
+            }else {
+                if (myList != null) {
+                    bookDetailsFragment.changeBook(myList.get(place));
+                }
+            }
+                if (container2present&&myList != null) {
+
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.container, BookListFragment.newInstance(myList))
+                            .commit();
                     getSupportFragmentManager()
                             .beginTransaction()
                             .replace(R.id.containerLandscape, bookDetailsFragment)
                             .commit();
+                    if(place>=0) {
+                        bookDetailsFragment.changeBook(myList.get(place));
+                    }
+
                 }
-            } else {
-                if(myList.size() != 0) {
-                    bookDetailsFragment.changeBook(myList.get(place));
-                }
+
             }
     }
-    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         requestQueue = Volley.newRequestQueue(this);
+
         if(requestCode==1){
             if(resultCode==RESULT_OK){
+
                 String url = "https://kamorris.com/lab/cis3515/search.php?term=";
                 String result = data.getStringExtra("result");
                 JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET,url+result,null,new Response.Listener<JSONArray>() {
@@ -167,7 +190,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     @Override
                     public void onResponse(JSONArray response) {
                         try {
-                            BookList myList = new BookList();
+                            myList = new BookList();
+                            place = -1;
                             for(int i = 0 ; i<response.length(); i++) {
 
                                 JSONObject book = response.getJSONObject(i);
@@ -185,6 +209,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
 
                             }
+
 
 
                         } catch (JSONException e) {
@@ -209,3 +234,5 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         }
     }
 }
+//TODO: when you type in a word that is not found the data set is not updated
+//TODO: Save when closing, i think you can copy code from onrestoreinstancestate and put it in resume

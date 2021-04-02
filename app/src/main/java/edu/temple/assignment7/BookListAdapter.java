@@ -65,6 +65,7 @@ public class BookListAdapter extends BaseAdapter{
 
         textView.setText(bookList.get(position).getTitle());
         author.setText(bookList.get(position).getAuthor());
+        notifyDataSetChanged();
 
 
         return linearLayout;

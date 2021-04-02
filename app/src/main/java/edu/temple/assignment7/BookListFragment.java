@@ -41,6 +41,7 @@ public class BookListFragment extends Fragment {
         if (getArguments() != null) {
             myBookList = getArguments().getParcelable(ARG_BOOKS);
         }
+
     }
 
     @Override
@@ -50,6 +51,7 @@ public class BookListFragment extends Fragment {
         ListView listView = (ListView) inflater.inflate(R.layout.fragment_book_list, container, false);
 
         listView.setAdapter(new BookListAdapter(getActivity(),myBookList));
+
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
 
