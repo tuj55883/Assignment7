@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 
@@ -17,6 +18,7 @@ public class ControlFragment extends Fragment {
     Button play;
     Button pause;
     Button stop;
+    SeekBar seekBar;
 
     public ControlFragment() {
 
@@ -46,11 +48,40 @@ public class ControlFragment extends Fragment {
         play = (Button)view.findViewById(R.id.playButton);
         pause = (Button) view.findViewById(R.id.pauseButton);
         stop = (Button) view.findViewById(R.id.stopButton);
+        seekBar = (SeekBar) view.findViewById(R.id.seekBar);
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 ((ControlFragment.ControlFragmentInterface) getActivity()).playClicked();
-                Log.d("here","here");
+            }
+        });
+        pause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ((ControlFragment.ControlFragmentInterface) getActivity()).pauseClicked();
+            }
+        });
+        stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ((ControlFragment.ControlFragmentInterface) getActivity()).stopClicked();
+            }
+        });
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                ((ControlFragment.ControlFragmentInterface) getActivity()).timeChanged(progress);
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
             }
         });
 
@@ -63,6 +94,7 @@ public class ControlFragment extends Fragment {
         public void playClicked() ;
         public void pauseClicked() ;
         public void stopClicked() ;
+        public void timeChanged(int progress);
 
     }
 

@@ -16,7 +16,10 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,8 +50,23 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     BookDetailsFragment bookDetailsFragment;
     ControlFragment audioControlFragment;
     static int place;
+    static int bookLength;
     Button searchMain;
     RequestQueue requestQueue;
+    static boolean canPlay = false;
+
+    Handler myHandler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
+        @Override
+        public boolean handleMessage(@NonNull Message msg) {
+
+            ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                    findFragmentById(R.id.audioControlContainer);
+
+            //fragment.seekBar.setProgress(msg.what);
+            Log.d("here2",""+msg.what);
+            return true;
+        }
+    });
 
     AudiobookService.MediaControlBinder myService;
     boolean isConnected;
@@ -56,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             myService = (AudiobookService.MediaControlBinder) binder;
+            myService.setProgressHandler(myHandler);
             isConnected = true;
         }
 
@@ -123,15 +142,26 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void pauseClicked() {
-        if(isConnected){
+        if(isConnected && place!=-1){
             myService.pause();
+            ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                    findFragmentById(R.id.audioControlContainer);
+            Log.d("here",""+fragment.seekBar.getProgress());
         }
     }
 
     @Override
     public void stopClicked() {
-        if(isConnected){
+        if(isConnected && place!=-1){
             myService.stop();
+        }
+    }
+
+    @Override
+    public void timeChanged(int progress) {
+        if(isConnected && place!=-1&& canPlay) {
+            myService.play(myList.get(place).getId(),progress);
+
         }
     }
 
@@ -142,6 +172,15 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void itemClicked(int position, BookList myList) {
         //This sets the place if the app is restarted
         place = position;
+        bookLength = myList.get(position).getDuration();
+        canPlay = false;
+        ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                findFragmentById(R.id.audioControlContainer);
+        fragment.seekBar.setProgress(0);
+        fragment.seekBar.setMax(myList.get(position).getDuration());
+        myService.stop();
+        canPlay = true;
+
         //This checks weather to put the display fragment in
         //container one if in portrait or container 2 in landscape
         if (!container2present) {
@@ -292,3 +331,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     }
 }
 
+//TODO: Seek bar almost done, won't update amd message being returned by handler is always 0
+//TODO: It crashes when play is clicked with no book selected. so fix that
+//TODO: Make it keep playing when rotated
+//TODO: Display now playing

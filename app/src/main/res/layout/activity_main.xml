@@ -8,12 +8,13 @@
 
     <FrameLayout
         android:id="@+id/container"
-        android:layout_width="230dp"
-        android:layout_height="489dp"
+        android:layout_width="233dp"
+        android:layout_height="426dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.401">
 
     </FrameLayout>
 
@@ -29,13 +30,15 @@
 
     <FrameLayout
         android:id="@+id/audioControlContainer"
-        android:layout_width="406dp"
-        android:layout_height="95dp"
+        android:layout_width="374dp"
+        android:layout_height="88dp"
         android:layout_marginTop="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.491"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/container">
+        app:layout_constraintTop_toBottomOf="@+id/container"
+        app:layout_constraintVertical_bias="0.016">
 
     </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
