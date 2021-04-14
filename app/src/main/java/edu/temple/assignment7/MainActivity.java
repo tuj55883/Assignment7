@@ -11,8 +11,12 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.app.Activity;
+import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +33,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
+import edu.temple.audiobookplayer.AudiobookService;
+
+public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface, ControlFragment.ControlFragmentInterface  {
     //Makes keys for the booklist and book selected that we will save
     private static final String KEY = "a";
     private static final String KEY2 = "b";
@@ -39,9 +45,25 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     static BookList myList;
     boolean container2present;
     BookDetailsFragment bookDetailsFragment;
+    ControlFragment audioControlFragment;
     static int place;
     Button searchMain;
     RequestQueue requestQueue;
+
+    AudiobookService.MediaControlBinder myService;
+    boolean isConnected;
+    ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            myService = (AudiobookService.MediaControlBinder) binder;
+            isConnected = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isConnected = false;
+        }
+    };
 
 
 
@@ -56,6 +78,15 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         //the activity returns the user search
         //Go to activity result to see the outcome of the search
         searchMain = findViewById(R.id.searchMain);
+        Intent serviceIntent = new Intent(MainActivity.this, AudiobookService.class);
+        bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE);
+
+        audioControlFragment = new ControlFragment();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.audioControlContainer, audioControlFragment)
+                .commit();
+
         searchMain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -82,6 +113,28 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     }
 
+    @Override
+    public void playClicked(){
+
+        if(isConnected){
+            myService.play(myList.get(place).getId());
+        }
+    }
+
+    @Override
+    public void pauseClicked() {
+        if(isConnected){
+            myService.pause();
+        }
+    }
+
+    @Override
+    public void stopClicked() {
+        if(isConnected){
+            myService.stop();
+        }
+    }
+
 
     //This is the selection of the book from the list
     //When clicked it will display the book selected
@@ -92,11 +145,15 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         //This checks weather to put the display fragment in
         //container one if in portrait or container 2 in landscape
         if (!container2present) {
+
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.container, BookDetailsFragment.newInstance(myList.get(position)))
                     .addToBackStack(null)
                     .commit();
+
+
+
         } else {
             bookDetailsFragment.changeBook(myList.get(position));
         }
@@ -188,8 +245,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                                 String title = book.getString("title");
                                 String author = book.getString("author");
                                 int id = book.getInt("id");
+                                int duration = book.getInt("duration");
                                 String coverURL = book.getString("cover_url");
-                                Book newBook = new Book(title,author,id,coverURL);
+
+                                Book newBook = new Book(title,author,id,coverURL,duration);
                                 myList.add(newBook);
 
                             }
