@@ -9,12 +9,14 @@ public class Book implements Parcelable {
     private String author;
     private int id;
     private String coverURL;
+    private int duration;
 
     public Book(String title, String author, int id, String coverURL) {
         this.title = title;
         this.author = author;
         this.id = id;
         this.coverURL = coverURL;
+        this.duration = duration;
     }
 
     public Book() {
@@ -54,6 +56,10 @@ public class Book implements Parcelable {
         return coverURL;
     }
 
+    public int getDuration() {
+        return duration;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }
@@ -68,6 +74,10 @@ public class Book implements Parcelable {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
 
     @Override
