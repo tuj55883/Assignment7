@@ -74,8 +74,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     findFragmentById(R.id.audioControlContainer);
             canPlay =false;
             if(myService.isPlaying()&&((AudiobookService.BookProgress)msg.obj).getProgress()>=0&& max>=((AudiobookService.BookProgress)msg.obj).getProgress()){
-                fragment.seekBar.setProgress(((AudiobookService.BookProgress)msg.obj).getProgress());
+                canPlay =false;
+
+                fragment.seekBar.setProgress(((AudiobookService.BookProgress) msg.obj).getProgress());
                 spot = fragment.seekBar.getProgress();
+
             }
 
             canPlay = true;
@@ -191,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     @Override
     public void timeChanged(int progress) {
         if(isConnected && place!=-1&& canPlay) {
-            myService.play(myList.get(place).getId(),progress);
+            myService.seekTo(progress);
 
         }
     }
