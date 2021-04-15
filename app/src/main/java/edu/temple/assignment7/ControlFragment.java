@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -19,6 +20,7 @@ public class ControlFragment extends Fragment {
     Button pause;
     Button stop;
     SeekBar seekBar;
+    TextView textView;
 
     public ControlFragment() {
 
@@ -49,6 +51,7 @@ public class ControlFragment extends Fragment {
         pause = (Button) view.findViewById(R.id.pauseButton);
         stop = (Button) view.findViewById(R.id.stopButton);
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
+        textView = (TextView) view.findViewById(R.id.textView3);
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

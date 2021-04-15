@@ -44,6 +44,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     //Makes keys for the booklist and book selected that we will save
     private static final String KEY = "a";
     private static final String KEY2 = "b";
+    private static final String KEY3 = "c";
+    private static final String KEY4 = "d";
+    private static final String KEY5 = "e";
 
     //Initializes all the values we will use
     String bookKey = "book";
@@ -51,8 +54,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     boolean container2present;
     BookDetailsFragment bookDetailsFragment;
     ControlFragment audioControlFragment;
-    static int place;
+    static int place = -1;
     static int bookLength;
+    static int spot;
+    static String name;
+    static int max;
     Button searchMain;
     RequestQueue requestQueue;
     static boolean canPlay = false;
@@ -67,7 +73,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
                     findFragmentById(R.id.audioControlContainer);
             canPlay =false;
-            fragment.seekBar.setProgress(((AudiobookService.BookProgress)msg.obj).getProgress());
+            if(myService.isPlaying()&&((AudiobookService.BookProgress)msg.obj).getProgress()>=0&& max>=((AudiobookService.BookProgress)msg.obj).getProgress()){
+                fragment.seekBar.setProgress(((AudiobookService.BookProgress)msg.obj).getProgress());
+                spot = fragment.seekBar.getProgress();
+            }
+
             canPlay = true;
 
             return true;
@@ -117,6 +127,13 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
                 Intent launchIntent = new Intent(MainActivity.this, BookSearchActivity.class);
                 startActivityForResult(launchIntent, 1);
+                if(myService.isPlaying()){
+                    myService.stop();
+                    ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                            findFragmentById(R.id.audioControlContainer);
+                    fragment.textView.setText("");
+                    name = "";
+                }
 
 
             }
@@ -140,8 +157,13 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     @Override
     public void playClicked(){
 
-        if(isConnected){
+        if(isConnected&& place!=-1){
             myService.play(myList.get(place).getId());
+            ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                    findFragmentById(R.id.audioControlContainer);
+            fragment.textView.setText("Now Playing: "+myList.get(place).getTitle());
+            name="Now Playing: "+myList.get(place).getTitle();
+
         }
     }
 
@@ -149,8 +171,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void pauseClicked() {
         if(isConnected && place!=-1){
             myService.pause();
-            ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
-                    findFragmentById(R.id.audioControlContainer);
+
         }
     }
 
@@ -158,6 +179,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void stopClicked() {
         if(isConnected && place!=-1){
             myService.stop();
+            ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                    findFragmentById(R.id.audioControlContainer);
+            fragment.textView.setText("");
+            name = "";
+            spot = 0;
 
         }
     }
@@ -182,7 +208,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
                 findFragmentById(R.id.audioControlContainer);
         fragment.seekBar.setProgress(0);
+        spot = 0;
         fragment.seekBar.setMax(myList.get(position).getDuration());
+        max = myList.get(position).getDuration();
+        fragment.textView.setText("");
+        name = "";
         if(myService.isPlaying()) {
             myService.stop();
         }
@@ -210,6 +240,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putInt(KEY,place);
         outState.putParcelable(KEY2,myList);
+        outState.putString(KEY3,name);
+        outState.putInt(KEY4,spot);
+        outState.putInt(KEY5,max);
+
         super.onSaveInstanceState(outState);
 
     }
@@ -223,7 +257,16 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if (savedInstanceState != null) {
             place = savedInstanceState.getInt(KEY);
             myList = savedInstanceState.getParcelable(KEY2);
-            Log.d("test", String.valueOf(place));
+            name = savedInstanceState.getString(KEY3);
+            spot = savedInstanceState.getInt(KEY4);
+            max = savedInstanceState.getInt(KEY5);
+            canPlay = false;
+            ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                    findFragmentById(R.id.audioControlContainer);
+            fragment.seekBar.setMax(max);
+            fragment.seekBar.setProgress(spot);
+            canPlay = true;
+            fragment.textView.setText(name);
             if (!container2present&&myList != null) {
 
                 if(place>=0) {
@@ -259,6 +302,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     }
 
                 }
+
 
             }
     }
@@ -339,6 +383,3 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 }
 
 
-//TODO: It crashes when play is clicked with no book selected. so fix that
-//TODO: Make it keep playing when rotated
-//TODO: Display now playing

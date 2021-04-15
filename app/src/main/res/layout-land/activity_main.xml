@@ -8,8 +8,8 @@
 
     <FrameLayout
         android:id="@+id/audioControlContainer"
-        android:layout_width="384dp"
-        android:layout_height="80dp"
+        android:layout_width="397dp"
+        android:layout_height="130dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.953"
