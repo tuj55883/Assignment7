@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     AudiobookService.MediaControlBinder myService;
     boolean isConnected;
 
-
+    //Makes handler for the audio book progress
     Handler myHandler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
         @Override
         public boolean handleMessage(@NonNull Message msg) {
@@ -75,9 +75,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             canPlay =false;
             if(myService.isPlaying()&&((AudiobookService.BookProgress)msg.obj).getProgress()>=0&& max>=((AudiobookService.BookProgress)msg.obj).getProgress()){
                 canPlay =false;
-
-                fragment.seekBar.setProgress(((AudiobookService.BookProgress) msg.obj).getProgress());
-                spot = fragment.seekBar.getProgress();
+                if(fragment != null) {
+                    fragment.seekBar.setProgress(((AudiobookService.BookProgress) msg.obj).getProgress());
+                    spot = fragment.seekBar.getProgress();
+                }
 
             }
 
@@ -87,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         }
     });
 
-
+    //Makes uses the media contol service
     ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -117,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         searchMain = findViewById(R.id.searchMain);
         Intent serviceIntent = new Intent(MainActivity.this, AudiobookService.class);
         bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE);
-
+        //Sets up audio fragment
         audioControlFragment = new ControlFragment();
         getSupportFragmentManager()
                 .beginTransaction()
@@ -156,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
 
     }
-
+    //Method to play the book when play is clicked
     @Override
     public void playClicked(){
 
@@ -169,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         }
     }
-
+    //Method to pause the book when pause is clicked
     @Override
     public void pauseClicked() {
         if(isConnected && place!=-1){
@@ -177,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         }
     }
-
+    //Method to stop the book when stop is clicked
     @Override
     public void stopClicked() {
         if(isConnected && place!=-1){
@@ -187,10 +188,13 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             fragment.textView.setText("");
             name = "";
             spot = 0;
+            canPlay = false;
+            fragment.seekBar.setProgress(0);
+            canPlay = true;
 
         }
     }
-
+    //Allow the user to select when in the book they want to play
     @Override
     public void timeChanged(int progress) {
         if(isConnected && place!=-1&& canPlay) {
@@ -243,6 +247,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putInt(KEY,place);
         outState.putParcelable(KEY2,myList);
+        //Made save instances for the name of the book, duration in the book, and length
         outState.putString(KEY3,name);
         outState.putInt(KEY4,spot);
         outState.putInt(KEY5,max);
@@ -263,6 +268,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             name = savedInstanceState.getString(KEY3);
             spot = savedInstanceState.getInt(KEY4);
             max = savedInstanceState.getInt(KEY5);
+            //sets the name, progress and length
             canPlay = false;
             ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
                     findFragmentById(R.id.audioControlContainer);
@@ -276,11 +282,13 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     getSupportFragmentManager()
                             .beginTransaction()
                             .replace(R.id.container, BookDetailsFragment.newInstance(myList.get(place)))
+                            .addToBackStack(null)
                             .commit();
                 } else {
                     getSupportFragmentManager()
                             .beginTransaction()
                             .replace(R.id.container, BookListFragment.newInstance(myList))
+                            .addToBackStack(null)
                             .commit();
                 }
 
