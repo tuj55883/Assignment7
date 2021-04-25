@@ -11,12 +11,14 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.app.Activity;
+import android.app.DownloadManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -37,6 +39,15 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 
 import edu.temple.audiobookplayer.AudiobookService;
 
@@ -78,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 if(fragment != null) {
                     fragment.seekBar.setProgress(((AudiobookService.BookProgress) msg.obj).getProgress());
                     spot = fragment.seekBar.getProgress();
+
                 }
 
             }
@@ -162,13 +174,37 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void playClicked(){
 
         if(isConnected&& place!=-1){
-            myService.play(myList.get(place).getId());
+            File file = new File(getFilesDir(),myList.get(place).getTitle());
+            if(file.exists()) {
+                myService.play(file,spot);
+
+            } else {
+                myService.play(myList.get(place).getId());
+
+                String url = "https://kamorris.com/lab/audlib/download.php?id="+myList.get(place).getId();
+                Thread thread = new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try  {
+                            downloadFile(url,file);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+                thread.start();
+
+            }
             ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
                     findFragmentById(R.id.audioControlContainer);
-            fragment.textView.setText("Now Playing: "+myList.get(place).getTitle());
-            name="Now Playing: "+myList.get(place).getTitle();
+            fragment.textView.setText("Now Playing: " + myList.get(place).getTitle());
+            name = "Now Playing: " + myList.get(place).getTitle();
+
 
         }
+
     }
     //Method to pause the book when pause is clicked
     @Override
@@ -240,6 +276,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         } else {
             bookDetailsFragment.changeBook(myList.get(position));
         }
+
 
     }
     //Saves the book list and placement when rotated
@@ -389,6 +426,28 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
 
             }
+        }
+    }
+    private static void downloadFile(String url, File outputFile) {
+        try {
+            URL u = new URL(url);
+            URLConnection conn = u.openConnection();
+            int contentLength = conn.getContentLength();
+
+            DataInputStream stream = new DataInputStream(u.openStream());
+
+            byte[] buffer = new byte[contentLength];
+            stream.readFully(buffer);
+            stream.close();
+
+            DataOutputStream fos = new DataOutputStream(new FileOutputStream(outputFile));
+            fos.write(buffer);
+            fos.flush();
+            fos.close();
+        } catch(FileNotFoundException e) {
+            return; // swallow a 404
+        } catch (IOException e) {
+            return; // swallow a 404
         }
     }
 }
