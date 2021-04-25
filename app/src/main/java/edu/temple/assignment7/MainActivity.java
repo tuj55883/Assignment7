@@ -18,6 +18,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     static boolean canPlay = false;
     AudiobookService.MediaControlBinder myService;
     boolean isConnected;
+    SharedPreferences preferences;
 
     //Makes handler for the audio book progress
     Handler myHandler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
@@ -89,6 +91,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 if(fragment != null) {
                     fragment.seekBar.setProgress(((AudiobookService.BookProgress) msg.obj).getProgress());
                     spot = fragment.seekBar.getProgress();
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putInt("spot",spot);
+                    editor.apply();
 
                 }
 
@@ -122,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        preferences = getPreferences(MODE_PRIVATE);
 
         //This is the search button
         //When clicked it launches the bookSearchActivty
@@ -136,6 +142,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 .beginTransaction()
                 .replace(R.id.audioControlContainer, audioControlFragment)
                 .commit();
+
+
+
+
+
 
         searchMain.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -201,6 +212,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     findFragmentById(R.id.audioControlContainer);
             fragment.textView.setText("Now Playing: " + myList.get(place).getTitle());
             name = "Now Playing: " + myList.get(place).getTitle();
+            preferences = getPreferences(MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putString("book",myList.get(place).getTitle());
+            editor.apply();
 
 
         }
@@ -367,6 +382,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 String url = "https://kamorris.com/lab/cis3515/search.php?term=";
                 String result = data.getStringExtra("result");
                 //combines the url and result into one search url
+                preferences = getPreferences(MODE_PRIVATE);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putString("search",result);
+                editor.apply();
                 JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET,url+result,null,new Response.Listener<JSONArray>() {
 
                     @Override
@@ -450,6 +469,85 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             return; // swallow a 404
         }
     }
-}
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //Kinda handle now playing
+        String s = preferences.getString("book", " ");
+        ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                findFragmentById(R.id.audioControlContainer);
+        fragment.textView.setText("Now playing:"+s);
+
+        //booklist
+        requestQueue = Volley.newRequestQueue(this);
+        String url = "https://kamorris.com/lab/cis3515/search.php?term=";
+        String result = preferences.getString("search", "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+        //combines the url and result into one search url
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET,url+result,null,new Response.Listener<JSONArray>() {
+
+            @Override
+            public void onResponse(JSONArray response) {
+                try {
+                    //Makes a brand new book list and sets place to -1 so
+                    //it resets the book selection
+                    myList = new BookList();
+                    place = -1;
+                    for(int i = 0 ; i<response.length(); i++) {
+                        //goes through each book one by one and adds it to the list
+
+                        JSONObject book = response.getJSONObject(i);
+                        String title = book.getString("title");
+                        String author = book.getString("author");
+                        int id = book.getInt("id");
+                        int duration = book.getInt("duration");
+                        String coverURL = book.getString("cover_url");
+
+                        Book newBook = new Book(title,author,id,coverURL,duration);
+                        myList.add(newBook);
+
+                    }
+                    //checks if container 2 is open
+                    container2present = findViewById(R.id.containerLandscape) != null;
+                    //makes the a brand new book list from the search
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.container, BookListFragment.newInstance(myList))
+                            .commit();
+                    //if container 2 is present makes a new one of them
+                    if(container2present) {
+                        bookDetailsFragment.makeEmpty();
+
+                    }
+
+
+
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener(){
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+
+
+        });
+        requestQueue.add(jsonArrayRequest);
+
+
+
+
+
+
+        }
+
+    }
+
 
 
