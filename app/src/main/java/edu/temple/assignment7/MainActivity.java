@@ -94,6 +94,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     spot = fragment.seekBar.getProgress();
                     isPlaying = myService.isPlaying();
                     SharedPreferences.Editor editor = preferences.edit();
+                    //Saves postition of each book to its own preference
+                    editor.putInt(myList.get(place).getTitle()+"Position",spot);
+                    //Keeps progress of current book
                     editor.putInt("spot",spot);
                     editor.apply();
 
@@ -156,13 +159,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
                 Intent launchIntent = new Intent(MainActivity.this, BookSearchActivity.class);
                 startActivityForResult(launchIntent, 1);
-                if(myService.isPlaying()){
-                    myService.stop();
-                    ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
-                            findFragmentById(R.id.audioControlContainer);
-                    fragment.textView.setText("");
-                    name = "";
-                }
+
 
 
             }
@@ -187,13 +184,36 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void playClicked(){
 
         if(isConnected&& place!=-1){
+            //Sets all the audio control stuff
+            bookLength = myList.get(place).getDuration();
+            canPlay = false;
+            ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                    findFragmentById(R.id.audioControlContainer);
+            fragment.seekBar.setProgress(0);
+            spot = 0;
+            fragment.seekBar.setMax(myList.get(place).getDuration());
+            max = myList.get(place).getDuration();
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putInt("max",max);
+            editor.apply();
+            //Stops playing last book
+            if(myService.isPlaying()) {
+                myService.stop();
+            }
+            canPlay = true;
+            //gets or makes a new file for the book
             File file = new File(getFilesDir(),myList.get(place).getTitle());
+            //if the file already existed then it will play from file
             if(file.exists()) {
-                myService.play(file,spot);
-
+                if(preferences.getInt(myList.get(place).getTitle()+"Position",0)>10) {
+                    myService.play(file, preferences.getInt(myList.get(place).getTitle()+"Position",0)-10);
+                } else{
+                    myService.play(file,0);
+                }
+                //if the file was empty it will stream it
             } else {
                 myService.play(myList.get(place).getId());
-
+                //This downloads the file for later
                 String url = "https://kamorris.com/lab/audlib/download.php?id="+myList.get(place).getId();
                 Thread thread = new Thread(new Runnable() {
 
@@ -210,12 +230,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 thread.start();
 
             }
-            ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
-                    findFragmentById(R.id.audioControlContainer);
+
             fragment.textView.setText("Now Playing: " + myList.get(place).getTitle());
             name = "Now Playing: " + myList.get(place).getTitle();
             preferences = getPreferences(MODE_PRIVATE);
-            SharedPreferences.Editor editor = preferences.edit();
+
 
 
             editor.putBoolean("isPlaying",true);
@@ -231,6 +250,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void pauseClicked() {
         if(isConnected && place!=-1){
             myService.pause();
+            //Keeps track of posistion when paused while shut down
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean("isPlaying",false);
             editor.apply();
@@ -250,8 +270,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             canPlay = false;
             fragment.seekBar.setProgress(0);
             canPlay = true;
+            //Sets the saved progress of the book that was playing to zero
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean("isPlaying",false);
+            editor.putInt(myList.get(place).getTitle()+"Position",0);
             editor.apply();
 
         }
@@ -272,23 +294,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void itemClicked(int position, BookList myList) {
         //This sets the place if the app is restarted
         place = position;
-        bookLength = myList.get(position).getDuration();
-        canPlay = false;
-        ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
-                findFragmentById(R.id.audioControlContainer);
-        fragment.seekBar.setProgress(0);
-        spot = 0;
-        fragment.seekBar.setMax(myList.get(position).getDuration());
-        max = myList.get(position).getDuration();
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt("max",max);
-        editor.apply();
-        fragment.textView.setText("");
-        name = "";
-        if(myService.isPlaying()) {
-            myService.stop();
-        }
-        canPlay = true;
+
 
         //This checks weather to put the display fragment in
         //container one if in portrait or container 2 in landscape
@@ -463,6 +469,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             }
         }
     }
+
+    //This method handles the downloading of the file
     private static void downloadFile(String url, File outputFile) {
         try {
             URL u = new URL(url);
@@ -485,7 +493,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             return; // swallow a 404
         }
     }
-
+    //This handles all the saved stuff like:
+    //The book list
+    //The position of the book when closed
+    //The legnth of the book
+    //Also if the book is playing it will continue playing
     @Override
     protected void onStart() {
         super.onStart();
@@ -497,7 +509,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
 
 
-        //booklist
+        //This remakes the booklist
         requestQueue = Volley.newRequestQueue(this);
         String url = "https://kamorris.com/lab/cis3515/search.php?term=";
         String result = preferences.getString("search", "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
@@ -541,7 +553,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                         if(place>=0) {
                             getSupportFragmentManager()
                                     .beginTransaction()
-                                    .add(R.id.container, BookListFragment.newInstance(myList))
+                                    .replace(R.id.container, BookListFragment.newInstance(myList))
                                     .addToBackStack(null)
                                     .commit();
                             getSupportFragmentManager()
@@ -578,9 +590,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                         }
 
                     }
-
-                    if(isPlaying){
-                        playClicked();
+                    //plays it if it was playing before
+                    File file = new File(getFilesDir(),myList.get(place).getTitle());
+                    if(isPlaying&&file.exists()){
+                        myService.play(file,spot);
                     }
 
 
@@ -619,7 +632,4 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     }
 
     }
-
-//TODO: Save the actual book that was playing and where it stopped.
-//TODO: also implement the 4th step of assignment
 
