@@ -95,7 +95,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     isPlaying = myService.isPlaying();
                     SharedPreferences.Editor editor = preferences.edit();
                     //Saves postition of each book to its own preference
-                    editor.putInt(myList.get(place).getTitle()+"Position",spot);
+                    if (place != -1) {
+                        editor.putInt(myList.get(place).getTitle()+"Position",spot);
+                    }
+
                     //Keeps progress of current book
                     editor.putInt("spot",spot);
                     editor.apply();
@@ -273,6 +276,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             //Sets the saved progress of the book that was playing to zero
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean("isPlaying",false);
+
             editor.putInt(myList.get(place).getTitle()+"Position",0);
             editor.apply();
 
@@ -503,7 +507,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         super.onStart();
         //Kinda handle now playing
         place = preferences.getInt("place", -1);
-        spot = preferences.getInt("spot",0);
+
         max = preferences.getInt("max",100);
         isPlaying =preferences.getBoolean("isPlaying",false);
 
@@ -545,6 +549,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     fragment.seekBar.setMax(max);
                     fragment.seekBar.setProgress(spot);
                     canPlay = true;
+                    spot = preferences.getInt(myList.get(place).getTitle()+"Position",0);
                     if(place!=-1) {
                         fragment.textView.setText("Now Playing: " + myList.get(place).getTitle());
                     }
@@ -591,9 +596,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
                     }
                     //plays it if it was playing before
-                    File file = new File(getFilesDir(),myList.get(place).getTitle());
-                    if(isPlaying&&file.exists()){
-                        myService.play(file,spot);
+                    if(place!=-1) {
+                        File file = new File(getFilesDir(), myList.get(place).getTitle());
+                        if (isPlaying && file.exists()) {
+                            myService.play(file, preferences.getInt(myList.get(place).getTitle()+"Position",0));
+                        }
                     }
 
 
