@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     AudiobookService.MediaControlBinder myService;
     boolean isConnected;
     SharedPreferences preferences;
+    boolean isPlaying;
 
     //Makes handler for the audio book progress
     Handler myHandler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
@@ -91,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 if(fragment != null) {
                     fragment.seekBar.setProgress(((AudiobookService.BookProgress) msg.obj).getProgress());
                     spot = fragment.seekBar.getProgress();
+                    isPlaying = myService.isPlaying();
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putInt("spot",spot);
                     editor.apply();
@@ -214,7 +216,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             name = "Now Playing: " + myList.get(place).getTitle();
             preferences = getPreferences(MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
-            editor.putString("book",myList.get(place).getTitle());
+
+
+            editor.putBoolean("isPlaying",true);
+            editor.putInt("place",place);
             editor.apply();
 
 
@@ -226,6 +231,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void pauseClicked() {
         if(isConnected && place!=-1){
             myService.pause();
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean("isPlaying",false);
+            editor.apply();
 
         }
     }
@@ -242,6 +250,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             canPlay = false;
             fragment.seekBar.setProgress(0);
             canPlay = true;
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean("isPlaying",false);
+            editor.apply();
 
         }
     }
@@ -269,6 +280,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         spot = 0;
         fragment.seekBar.setMax(myList.get(position).getDuration());
         max = myList.get(position).getDuration();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("max",max);
+        editor.apply();
         fragment.textView.setText("");
         name = "";
         if(myService.isPlaying()) {
@@ -327,7 +341,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             fragment.seekBar.setMax(max);
             fragment.seekBar.setProgress(spot);
             canPlay = true;
-            fragment.textView.setText(name);
+            if(place!=-1) {
+                fragment.textView.setText("Now Playing: " + myList.get(place).getTitle());
+            }
             if (!container2present&&myList != null) {
 
                 if(place>=0) {
@@ -474,10 +490,12 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     protected void onStart() {
         super.onStart();
         //Kinda handle now playing
-        String s = preferences.getString("book", " ");
-        ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
-                findFragmentById(R.id.audioControlContainer);
-        fragment.textView.setText("Now playing:"+s);
+        place = preferences.getInt("place", -1);
+        spot = preferences.getInt("spot",0);
+        max = preferences.getInt("max",100);
+        isPlaying =preferences.getBoolean("isPlaying",false);
+
+
 
         //booklist
         requestQueue = Volley.newRequestQueue(this);
@@ -493,7 +511,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     //Makes a brand new book list and sets place to -1 so
                     //it resets the book selection
                     myList = new BookList();
-                    place = -1;
+
+
                     for(int i = 0 ; i<response.length(); i++) {
                         //goes through each book one by one and adds it to the list
 
@@ -507,19 +526,63 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                         Book newBook = new Book(title,author,id,coverURL,duration);
                         myList.add(newBook);
 
+                        }
+                    canPlay = false;
+                    ControlFragment fragment = (ControlFragment) getSupportFragmentManager().
+                            findFragmentById(R.id.audioControlContainer);
+                    fragment.seekBar.setMax(max);
+                    fragment.seekBar.setProgress(spot);
+                    canPlay = true;
+                    if(place!=-1) {
+                        fragment.textView.setText("Now Playing: " + myList.get(place).getTitle());
                     }
-                    //checks if container 2 is open
-                    container2present = findViewById(R.id.containerLandscape) != null;
-                    //makes the a brand new book list from the search
-                    getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.container, BookListFragment.newInstance(myList))
-                            .commit();
-                    //if container 2 is present makes a new one of them
-                    if(container2present) {
-                        bookDetailsFragment.makeEmpty();
+                    if (!container2present&&myList != null) {
+
+                        if(place>=0) {
+                            getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .add(R.id.container, BookListFragment.newInstance(myList))
+                                    .addToBackStack(null)
+                                    .commit();
+                            getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .replace(R.id.container, BookDetailsFragment.newInstance(myList.get(place)))
+                                    .addToBackStack(null)
+                                    .commit();
+                        } else {
+                            getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .replace(R.id.container, BookListFragment.newInstance(myList))
+                                    .addToBackStack(null)
+                                    .commit();
+                        }
+
+
+                    }else {
+                        if (myList != null && myList.size() != 0 && place !=-1) {
+                            bookDetailsFragment.changeBook(myList.get(place));
+                        }
+                    }
+                    if (container2present&&myList != null && place !=-1) {
+
+                        getSupportFragmentManager()
+                                .beginTransaction()
+                                .replace(R.id.container, BookListFragment.newInstance(myList))
+                                .commit();
+                        getSupportFragmentManager()
+                                .beginTransaction()
+                                .replace(R.id.containerLandscape, bookDetailsFragment)
+                                .commit();
+                        if(place>=0) {
+                            bookDetailsFragment.changeBook(myList.get(place));
+                        }
 
                     }
+
+                    if(isPlaying){
+                        playClicked();
+                    }
+
 
 
 
@@ -545,9 +608,18 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
 
 
-        }
+
+
+
+
+
+
+
 
     }
 
+    }
 
+//TODO: Save the actual book that was playing and where it stopped.
+//TODO: also implement the 4th step of assignment
 
