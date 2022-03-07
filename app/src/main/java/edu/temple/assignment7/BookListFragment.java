@@ -1,3 +1,4 @@
+//This handles the displaying of the list of searched up books
 package edu.temple.assignment7;
 
 import android.os.Bundle;
@@ -26,7 +27,7 @@ public class BookListFragment extends Fragment {
 
     }
 
-
+    //This initializes the fragment
     public static BookListFragment newInstance(BookList myBookList) {
         BookListFragment fragment = new BookListFragment();
         Bundle args = new Bundle();
@@ -34,15 +35,16 @@ public class BookListFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
-
+    //This passes the list of books when created
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             myBookList = getArguments().getParcelable(ARG_BOOKS);
         }
-    }
 
+    }
+    //Puts the list of books in a list view
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -50,6 +52,7 @@ public class BookListFragment extends Fragment {
         ListView listView = (ListView) inflater.inflate(R.layout.fragment_book_list, container, false);
 
         listView.setAdapter(new BookListAdapter(getActivity(),myBookList));
+
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
 
@@ -60,7 +63,8 @@ public class BookListFragment extends Fragment {
         });
         return listView;
     }
-
+    //This implements the item clicked method from the main activity to return the book selected
+    //from the list
     interface BookListFragmentInterface{
         public void itemClicked(int position,BookList myBookList) ;
 

@@ -1,3 +1,4 @@
+//This is pretty much just an array list of books
 package edu.temple.assignment7;
 
 import android.os.Parcel;
